@@ -1,0 +1,102 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Resources:
+  ChimeCognitoAuthenticatedRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: ChimeCognitoAuthenticatedUserRole
+      Description: "Cognito authenticated user role"
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Federated:
+                - cognito-identity.amazonaws.com
+            Action:
+              - 'sts:AssumeRoleWithWebIdentity'
+            Condition:
+              StringEquals:
+                cognito-identity.amazonaws.com:aud: !Ref ChimeIdentityPool
+              ForAnyValue:StringLike:
+                cognito-identity.amazonaws.com:amr: authenticated
+    DependsOn: ChimeIdentityPool
+  ChimeCognitoUnauthenticatedRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: ChimeCognitoUnauthenticatedUserRole
+      Description: "Cognito unauthenticated user role"
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Federated:
+                - cognito-identity.amazonaws.com
+            Action:
+              - 'sts:AssumeRoleWithWebIdentity'
+            Condition:
+              StringEquals:
+                cognito-identity.amazonaws.com:aud: !Ref ChimeIdentityPool
+              ForAnyValue:StringLike:
+                cognito-identity.amazonaws.com:amr: unauthenticated
+    DependsOn: ChimeIdentityPool
+  ChimeIdentityPool:
+    Type: AWS::Cognito::IdentityPool
+    Properties:
+      IdentityPoolName: ChimeSDKIdentityPool
+      AllowUnauthenticatedIdentities: true
+  ChimeIdentityPoolRoleMap:
+    Type: AWS::Cognito::IdentityPoolRoleAttachment
+    Properties:
+      IdentityPoolId: !Ref ChimeIdentityPool
+      Roles:
+        unauthenticated: !GetAtt ChimeCognitoUnauthenticatedRole.Arn
+        authenticated: !GetAtt ChimeCognitoAuthenticatedRole.Arn
+    DependsOn: ChimeIdentityPool
+  ChimePinpointApplication:
+    Type: AWS::Pinpoint::App
+    Properties:
+      Name: ChimeSdkApplication
+  ChimeKinesisStream:
+    Type: AWS::Kinesis::Stream
+    Properties:
+      ShardCount: 2
+  ChimeCognitoAuthAccessPolicy:
+    Type: AWS::IAM::Policy
+    Properties:
+      PolicyName: ChimeMeetingsAccess
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Action:
+              - 'kinesis:PutRecord'
+              - 'kinesis:PutRecords'
+            Resource: !GetAtt ChimeKinesisStream.Arn
+          - Effect: Allow
+            Action:
+              - 'mobiletargeting:PutEvents'
+              - 'mobiletargeting:UpdateEndpoint'
+            Resource: !GetAtt ChimePinpointApplication.Arn
+      Roles:
+        - Ref: ChimeCognitoAuthenticatedRole
+        - Ref: ChimeCognitoUnauthenticatedRole
+Outputs :
+  ChimeIdentityPoolId:
+    Value: !Ref ChimeIdentityPool
+    Description:  Id for the identity pool
+  ChimeIdentityPoolName:
+    Value: !GetAtt ChimeIdentityPool.Name
+  ChimeCognitoUnauthenticatedRoleName:
+    Value: !Ref ChimeCognitoUnauthenticatedRole
+  ChimeCognitoAuthenticatedRoleName:
+    Value: !Ref ChimeCognitoAuthenticatedRole
+  ChimePinpointApplicationId:
+    Value: !Ref ChimePinpointApplication
+  ChimePinpointApplicationArn:
+    Value: !GetAtt ChimePinpointApplication.Arn
+  ChimeKinesisStreamArn:
+    Value: !GetAtt ChimeKinesisStream.Arn
+  ChimeKinesisStreamId:
+    Value: !Ref ChimeKinesisStream

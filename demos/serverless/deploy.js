@@ -175,7 +175,8 @@ spawnOrFail('sam', ['package', '--s3-bucket', `${bucket}`,
 console.log('Deploying serverless application');
 spawnOrFail('sam', ['deploy', '--template-file', './build/packaged.yaml', '--stack-name', `${stack}`,
                     '--parameter-overrides', `UseEventBridge=${useEventBridge} ChimeEndpoint=${chimeEndpoint}`,
-                    '--capabilities', 'CAPABILITY_IAM', '--region', `${region}`, '--no-fail-on-empty-changeset'], null, !disablePrintingLogs);
+                    '--capabilities', 'CAPABILITY_IAM CAPABILITY_NAMED_IAM',
+                    '--region', `${region}`, '--no-fail-on-empty-changeset'], null, !disablePrintingLogs);
 if (enableTerminationProtection) {
   spawnOrFail('aws', ['cloudformation', 'update-termination-protection', '--enable-termination-protection', '--stack-name', `${stack}`], null, false);
 }

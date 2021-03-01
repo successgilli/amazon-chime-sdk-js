@@ -5,6 +5,7 @@ const AWS = require('./aws-sdk');
 const fs = require('fs');
 const { v4: uuidv4 } = require('./uuid');
 const { metricScope } = require('./aws-embedded-metrics');
+const zlib = require('zlib');
 
 // Store meetings in a DynamoDB table so attendees can join by meeting title
 const ddb = new AWS.DynamoDB();
@@ -30,7 +31,25 @@ const {
 
 exports.index = async (event, context, callback) => {
   // Return the contents of the index page
-  return response(200, 'text/html', fs.readFileSync('./index.html', {encoding: 'utf8'}));
+  // console.info('EVENT: ' + JSON.stringify(event))
+  const file = fs.readFileSync('./index.html', {encoding: 'utf8'});
+  const acceptEncoding = event.headers['accept-encoding'] || event.headers['Accept-Encoding'];
+  if (acceptEncoding && acceptEncoding.includes("gzip")) {
+    console.info("Gzipped content, size " + file.length)
+    const gzippedResponse = zlib.gzipSync(file);
+    console.info("Gzipped: " + gzippedResponse.length);
+    return {
+      body: gzippedResponse.toString("base64"),
+      isBase64Encoded: true,
+      statusCode: 200,
+      headers: {
+        'Content-Encoding': 'gzip',
+        'Content-Type': 'text/html',
+      }
+    };
+  } else {
+    return response(200, 'text/html', file);
+  }
 };
 
 exports.join = async(event, context) => {
@@ -57,6 +76,8 @@ exports.join = async(event, context) => {
       // Any meeting ID you wish to associate with the meeting.
       // For simplicity here, we use the meeting title.
       ExternalMeetingId: query.title.substring(0, 64),
+
+      MeetingHostId: "test",
 
       // Tags associated with the meeting. They can be used in cost allocation console
       Tags: [
