@@ -65,7 +65,7 @@ Resources:
   ChimeCognitoAuthAccessPolicy:
     Type: AWS::IAM::Policy
     Properties:
-      PolicyName: ChimeMeetingsAccess
+      PolicyName: ChimeCognitoAuthRoleAccessPolicy
       PolicyDocument:
         Version: "2012-10-17"
         Statement:
@@ -78,7 +78,14 @@ Resources:
             Action:
               - 'mobiletargeting:PutEvents'
               - 'mobiletargeting:UpdateEndpoint'
-            Resource: !GetAtt ChimePinpointApplication.Arn
+            Resource:
+              !Join
+              - ''
+              - - 'arn:aws:mobiletargeting:*:'
+                - !Ref 'AWS::AccountId'
+                - ':apps/'
+                - !Ref ChimePinpointApplication
+                - '*'
       Roles:
         - Ref: ChimeCognitoAuthenticatedRole
         - Ref: ChimeCognitoUnauthenticatedRole
