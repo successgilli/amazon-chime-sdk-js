@@ -46,7 +46,8 @@ describe('CleanRestartedSessionTask', () => {
     context.logger = context.audioVideoController.logger;
     context.transceiverController = new DefaultTransceiverController(
       context.logger,
-      browserBehavior
+      browserBehavior,
+      false
     );
     context.videoTileController = new DefaultVideoTileController(
       new DefaultVideoTileFactory(),

@@ -82,7 +82,8 @@ describe('CleanStoppedSessionTask', () => {
     context.connectionMonitor = new TestConnectionMonitor();
     context.transceiverController = new DefaultTransceiverController(
       context.logger,
-      browserBehavior
+      browserBehavior,
+      false
     );
     context.videoDownlinkBandwidthPolicy = new NoVideoDownlinkBandwidthPolicy();
     context.videoTileController = new DefaultVideoTileController(

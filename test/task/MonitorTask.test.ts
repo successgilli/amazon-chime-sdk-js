@@ -56,6 +56,7 @@ import DefaultSimulcastUplinkPolicy from '../../src/videouplinkbandwidthpolicy/D
 import DefaultWebSocketAdapter from '../../src/websocketadapter/DefaultWebSocketAdapter';
 import DOMMockBehavior from '../dommock/DOMMockBehavior';
 import DOMMockBuilder from '../dommock/DOMMockBuilder';
+import CreateMeetingResponseMock from '../meetingsession/CreateMeetingResponseMock';
 
 function createSignalingEventForBitrateFrame(logger: Logger): SignalingClientEvent {
   const webSocketAdapter = new DefaultWebSocketAdapter(logger);
@@ -192,6 +193,10 @@ describe('MonitorTask', () => {
       new ConnectionHealthPolicyConfiguration(),
       new ConnectionHealthData()
     );
+    context.meetingSessionConfiguration = new MeetingSessionConfiguration(
+      CreateMeetingResponseMock.MeetingResponseMock,
+      CreateMeetingResponseMock.AttendeeResponseMock
+    );
   });
 
   afterEach(() => {
@@ -203,12 +208,11 @@ describe('MonitorTask', () => {
 
   describe('run', () => {
     beforeEach(() => {
-      context.meetingSessionConfiguration = new MeetingSessionConfiguration();
-      context.meetingSessionConfiguration.credentials = new MeetingSessionCredentials();
       context.meetingSessionConfiguration.credentials.attendeeId = 'attendeeId';
       context.meetingSessionConfiguration.credentials.joinToken = 'foo-join-token';
       context.meetingSessionConfiguration.attendeePresenceTimeoutMs = 0;
     });
+
     it('registers an observer', async () => {
       const spy1 = sinon.spy(task, 'videoReceiveBandwidthDidChange');
       const spy2 = sinon.spy(task, 'connectionHealthDidChange');
@@ -259,7 +263,6 @@ describe('MonitorTask', () => {
 
   describe('run for attendeePresenceTimeoutMs > 0', () => {
     beforeEach(() => {
-      context.meetingSessionConfiguration = new MeetingSessionConfiguration();
       context.meetingSessionConfiguration.credentials = new MeetingSessionCredentials();
       context.meetingSessionConfiguration.credentials.attendeeId = 'attendeeId';
       context.meetingSessionConfiguration.credentials.joinToken = 'foo-join-token';
@@ -684,6 +687,25 @@ describe('MonitorTask', () => {
       task.connectionHealthDidChange(connectionHealthData);
 
       expect(spy.calledOnce).to.be.true;
+    });
+
+    it('returns immediately if audio connection does not exist', () => {
+      context.meetingSessionConfiguration.urls.audioHostURL = null;
+      class TestConnectionHealthData extends ConnectionHealthData {
+        isConnectionStartRecent(_recentDurationMs: number): boolean {
+          return false;
+        }
+      }
+      const spy = sinon.spy(context.audioVideoController, 'handleMeetingSessionStatus');
+      const connectionHealthData = new TestConnectionHealthData();
+      connectionHealthData.consecutiveStatsWithNoPackets = Infinity;
+      task.connectionHealthDidChange(connectionHealthData);
+      context.meetingSessionConfiguration.urls = null;
+      connectionHealthData.consecutiveStatsWithNoPackets = 0;
+      task.connectionHealthDidChange(connectionHealthData);
+      context.meetingSessionConfiguration = null;
+      task.connectionHealthDidChange(connectionHealthData);
+      expect(spy.called).to.be.false;
     });
 
     it('notifies the connection is poor', done => {

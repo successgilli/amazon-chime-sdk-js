@@ -226,6 +226,9 @@ export default class DefaultAudioVideoController
       enableUnifiedPlanForChromiumBasedBrowsers: this.configuration
         .enableUnifiedPlanForChromiumBasedBrowsers,
     });
+
+    const videoConnectionOnlyMode = this.configuration.urls.audioHostURL.length === 0;
+
     this.meetingSessionContext.meetingSessionConfiguration = this.configuration;
     this.meetingSessionContext.signalingClient = new DefaultSignalingClient(
       this._webSocketAdapter,
@@ -243,7 +246,8 @@ export default class DefaultAudioVideoController
     } else {
       this.meetingSessionContext.transceiverController = new DefaultTransceiverController(
         this.logger,
-        this.meetingSessionContext.browserBehavior
+        this.meetingSessionContext.browserBehavior,
+        videoConnectionOnlyMode
       );
     }
 
@@ -335,7 +339,9 @@ export default class DefaultAudioVideoController
     } else {
       this._reconnectController.startedConnectionAttempt(true);
     }
-
+    const needsToWaitForAttendeePresence =
+      !videoConnectionOnlyMode &&
+      this.meetingSessionContext.meetingSessionConfiguration.attendeePresenceTimeoutMs > 0;
     try {
       await new SerialGroupTask(this.logger, this.wrapTaskName('AudioVideoStart'), [
         new MonitorTask(
@@ -363,7 +369,7 @@ export default class DefaultAudioVideoController
               new SetLocalDescriptionTask(this.meetingSessionContext),
               new FinishGatheringICECandidatesTask(this.meetingSessionContext),
               new SubscribeAndReceiveSubscribeAckTask(this.meetingSessionContext),
-              this.meetingSessionContext.meetingSessionConfiguration.attendeePresenceTimeoutMs > 0
+              needsToWaitForAttendeePresence
                 ? new TimeoutTask(
                     this.logger,
                     new ParallelGroupTask(this.logger, 'FinalizeConnection', [

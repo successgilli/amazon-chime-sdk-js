@@ -262,6 +262,11 @@ export default class MonitorTask
   }
 
   connectionHealthDidChange(connectionHealthData: ConnectionHealthData): void {
+    if (!this.context.meetingSessionConfiguration?.urls?.audioHostURL?.length) {
+      // no audio host information, no need to reconnect due to ping pong
+      return;
+    }
+
     if (connectionHealthData.consecutiveMissedPongs === 0) {
       if (this.context.reconnectController) {
         this.context.reconnectController.setLastActiveTimestampMs(Date.now());

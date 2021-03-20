@@ -69,6 +69,20 @@ describe('DefaultTransceiverController', () => {
       expect(peer.getTransceivers().length).to.equal(0);
     });
 
+    it('can not set up audio transceiver if client does not have audio connection', () => {
+      const videoConnectionOnly = true;
+      tc = new DefaultTransceiverController(logger, browser, videoConnectionOnly);
+      const peer: RTCPeerConnection = new RTCPeerConnection();
+      tc.setPeer(peer);
+      tc.setupLocalTransceivers();
+      const transceivers = peer.getTransceivers();
+      expect(transceivers.length).to.equal(1);
+      const videoTransceiver = transceivers[0];
+      expect(videoTransceiver.direction).to.equal('inactive');
+      expect(videoTransceiver.receiver.track.kind).to.equal('video');
+      expect(videoTransceiver.sender.track.kind).to.equal('video');
+    });
+
     it('can set up transceivers once', () => {
       const peer: RTCPeerConnection = new RTCPeerConnection();
       tc.setPeer(peer);

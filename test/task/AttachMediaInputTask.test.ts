@@ -54,7 +54,8 @@ describe('AttachMediaInputTask', () => {
     context.browserBehavior = new DefaultBrowserBehavior();
     context.transceiverController = new DefaultTransceiverController(
       logger,
-      context.browserBehavior
+      context.browserBehavior,
+      false
     );
     // @ts-ignore
     const audioTrack = new MediaStreamTrack('attach-media-input-task-audio-track-id', 'audio');
@@ -202,7 +203,8 @@ describe('AttachMediaInputTask', () => {
       context.browserBehavior = new DefaultBrowserBehavior();
       context.transceiverController = new DefaultTransceiverController(
         logger,
-        context.browserBehavior
+        context.browserBehavior,
+        false
       );
       context.statsCollector = new DefaultStatsCollector(
         context.audioVideoController,

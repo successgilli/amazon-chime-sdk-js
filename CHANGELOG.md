@@ -12,7 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - [Demo] Add Tensorflow BodyPix segmentation demo for `VideoProcessor`.
 
 ### Changed
-
+- Add check for audio host URL during join flow.
 - Update `SignalingProtocol` with optional video metric fields and optional join flags.
 
 ### Removed

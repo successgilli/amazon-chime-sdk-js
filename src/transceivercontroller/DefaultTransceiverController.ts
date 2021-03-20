@@ -14,7 +14,11 @@ export default class DefaultTransceiverController implements TransceiverControll
   protected defaultMediaStream: MediaStream | null = null;
   protected peer: RTCPeerConnection | null = null;
 
-  constructor(protected logger: Logger, protected browserBehavior: BrowserBehavior) {}
+  constructor(
+    protected logger: Logger,
+    protected browserBehavior: BrowserBehavior,
+    protected videoConnectionOnlyMode: boolean = false
+  ) {}
 
   setEncodingParameters(_params: Map<string, RTCRtpEncodingParameters>): void {
     return;
@@ -53,6 +57,7 @@ export default class DefaultTransceiverController implements TransceiverControll
   localAudioTransceiver(): RTCRtpTransceiver {
     return this._localAudioTransceiver;
   }
+
   localVideoTransceiver(): RTCRtpTransceiver {
     return this._localCameraTransceiver;
   }
@@ -116,7 +121,7 @@ export default class DefaultTransceiverController implements TransceiverControll
       this.defaultMediaStream = new MediaStream();
     }
 
-    if (!this._localAudioTransceiver) {
+    if (!this.videoConnectionOnlyMode && !this._localAudioTransceiver) {
       this._localAudioTransceiver = this.peer.addTransceiver('audio', {
         direction: 'inactive',
         streams: [this.defaultMediaStream],

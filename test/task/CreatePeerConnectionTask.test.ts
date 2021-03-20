@@ -78,7 +78,7 @@ describe('CreatePeerConnectionTask', () => {
     context.videosToReceive = new DefaultVideoStreamIdSet();
     context.videoStreamIndex = new DefaultVideoStreamIndex(logger);
     context.activeVideoInput = null;
-    context.transceiverController = new DefaultTransceiverController(logger, browser);
+    context.transceiverController = new DefaultTransceiverController(logger, browser, false);
     context.audioMixController = new DefaultAudioMixController(logger);
     context.browserBehavior = new DefaultBrowserBehavior();
     task = new CreatePeerConnectionTask(context);
@@ -175,7 +175,7 @@ describe('CreatePeerConnectionTask', () => {
             return true;
           }
         }
-        context.transceiverController = new TestTransceiverController(logger, browser);
+        context.transceiverController = new TestTransceiverController(logger, browser, false);
 
         await task.run();
         await context.peer.setRemoteDescription(videoRemoteDescription);

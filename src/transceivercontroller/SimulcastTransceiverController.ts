@@ -16,8 +16,12 @@ export default class SimulcastTransceiverController extends DefaultTransceiverCo
     RTCRtpEncodingParameters
   >();
 
-  constructor(logger: Logger, browserBehavior: BrowserBehavior) {
-    super(logger, browserBehavior);
+  constructor(
+    logger: Logger,
+    browserBehavior: BrowserBehavior,
+    videoConnectionMode: boolean = false
+  ) {
+    super(logger, browserBehavior, videoConnectionMode);
     let scale = 4;
     for (let i = 0; i < SimulcastTransceiverController.NAME_ARR_ASCENDING.length; i++) {
       const ridName = SimulcastTransceiverController.NAME_ARR_ASCENDING[i];
@@ -105,7 +109,7 @@ export default class SimulcastTransceiverController extends DefaultTransceiverCo
       this.defaultMediaStream = new MediaStream();
     }
 
-    if (!this._localAudioTransceiver) {
+    if (!this.videoConnectionOnlyMode && !this._localAudioTransceiver) {
       this._localAudioTransceiver = this.peer.addTransceiver('audio', {
         direction: 'inactive',
         streams: [this.defaultMediaStream],
